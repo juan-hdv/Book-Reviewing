@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    User Login
+{% endblock %}
+
+{% block body %}
+<h1>User Login</h1>
+
+<form action="{{ url_for('login') }}" method="post">
+
+    <div class="form-group">
+        <input class="form-control" name="username" placeholder="Username" required>
+    </div>
+
+    <div class="form-group">
+        <input class="form-control" name="password" type="password"  placeholder="Password" required>
+    </div>
+
+    <div class="form-group">
+        <button class="btn btn-primary">Login</button>
+    </div>
+
+</form>
+<div id="message_zone1">
+    <div class="alert {{ msgType }}" role="alert">
+    {{ msgText }}
+    </div>
+</div>
+
+<p>If you do not have an account, please register <a href="{{ url_for('register') }}">here</a></p>
+{% endblock %}

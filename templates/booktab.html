@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Book Tab
+{% endblock %}
+
+{% block body %}
+	<a href="{{	url_for('logout') }}">logout</a>
+	<br>
+    <h1>Book Tab for {{ book_id }}</h1>
+    <table>
+        <tr>
+            <td>Title:</td>
+            <td>{{ book.title }}</td>
+        </tr>
+        <tr>
+            <td>Author:</td>
+            <td>{{ book.author }}</td>
+        </tr>
+        <tr>
+            <td>ISB: </td>
+            <td>{{ book.isbn }}</td>
+        </tr>
+        <tr>
+            <td>Year:</td>
+            <td>{{ book.year }}</td>
+        </tr>
+    </table>
+
+    <a href="{{ url_for('books') }}">Back</a>
+
+{% endblock %}

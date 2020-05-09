@@ -1,0 +1,67 @@
+/* HTML5 selectors */
+article {
+  color: #000;
+  background-color: #a5bcc9; }
+
+aside {
+  /*
+  color: #fff;
+  background-color: #c0392b
+  */
+  background-color: #f2f2f2;
+  border: 3px inset #a5bcc9; }
+
+footer {
+  color: #fff;
+  background-color: #16a085;
+  padding: 1em; }
+
+img {
+  margin: 10px auto;
+  width: 100%;
+  display: block; }
+
+a:hover {
+  color: #096e87; }
+
+/* New selectors */
+small {
+  font-size: 0.7em;
+  font-family: inherit; }
+
+/* Classes */
+/* SCSS nesting */
+.MyContainer {
+  margin: 0 5%;
+  padding: 1px; }
+  .MyContainer .row {
+    border: 1px solid #a5bcc9; }
+
+.ColorGrid {
+  background-color: #d2d2d2; }
+
+/* *IDs */
+#message_zone {
+  margin: 2px 4%;
+  padding: 0.5em 0.5em 0 0.5em;
+  border: 1px solid #a5bcc9;
+  text-align: center;
+  font-style: italic;
+  }
+
+/* MEDIA RULES */
+@media screen and (max-width: 600px) {
+  /* Inheritance */
+  h1, h2, h3 {
+    font-weight: bold; }
+
+  h1 {
+    font-size: 110%; }
+
+  h2 {
+    font-size: 90%; }
+
+  h3 {
+    font-size: 80%; } }
+
+/*# sourceMappingURL=main.css.map */

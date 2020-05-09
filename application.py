@@ -1,10 +1,13 @@
-import os, re, ahocorasick
+import flask
+import os, re
+import ahocorasick
 import numpy as np
 
 from flask import Flask, session, render_template, request,  redirect, url_for 
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from datetime import timedelta
 
 app = Flask(__name__)
 
@@ -24,16 +27,18 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/",methods=["GET"])
 def index ():
-    username = session.get('username')
     # If there is an active session for user
-    if username: # != None
+    if session.get ("username"): # != None
+        username = session['username']
+        if not session.get ("books"):
+            session["books"] = db.execute("SELECT * FROM books").fetchall()
         return redirect(url_for('books'))
     else:
         return render_template("login.html", msgType="alert-light", #bootstrap alert
                                              msgText="Please type your username and password")
             
 
-@app.route("/",methods=["POST"])
+@app.route("/login",methods=["POST"])
 def login():
     # User POSTed usr/pwd from login template
     username = request.form.get ('username')
@@ -41,7 +46,6 @@ def login():
     # Make sure username exist and password is correct
     if db.execute("SELECT * FROM users WHERE usr = :usr AND pass = :pwd", {"usr": username, "pwd":password}).rowcount != 0:
         session["username"] = username
-        #session.commit()
         return redirect(url_for("index"))
     return render_template("login.html", msgType="alert-danger", #bootstrap alert
                                          msgText="Invalid user or password! Try again.")
@@ -53,12 +57,12 @@ def logout():
     return redirect(url_for("index"))
 
 @app.route("/register",methods=["GET"])
-def register():   	
+def register():     
     return render_template("registration.html")
 
 @app.route("/saveRegistration",methods=["POST"])
 def saveRegistration():
-	# get fields
+    # get fields
     name = request.form.get ('name')
     email = request.form.get ('email')
     user = request.form.get ('user')
@@ -74,20 +78,26 @@ def saveRegistration():
                                          msgText="Please type your username and password")
 
 
-@app.route("/books",methods=["POST"])
+@app.route("/books",methods=["GET"])
 def books():
-    return render_template("books.html",books=books)
+    return render_template("books.html",books=None)
 
 
 @app.route("/books_search",methods=["POST"])
 def booksSearch():
-    #
+
+    books=[]
+    if session.get ("books"):
+        books = session["books"]
+
+    searchTermsStr = request.form.get ('searchTerms')
+    searchTerms = re.sub ("[^a-z0-9_ ]","",searchTermsStr.lower())
+    searchTerms = searchTerms.split (" ")
+
+    searchMode = request.form.get ('searchMode')
+
     # Optimal search from solution in: 
     # https://stackoverflow.com/questions/34816775/python-optimal-search-for-substring-in-list-of-strings
-    #
-    searchTerms = request.form.get ('search_terms')
-    searchTerms = re.sub ("[^a-z0-9_ ]","",searchTerms.lower())
-    searchTerms = searchTerms.split (" ")
     '''
     auto = ahocorasick.Automaton() 
     for word in searchTerms:
@@ -95,12 +105,9 @@ def booksSearch():
     auto.make_automaton()
     '''
 
-    books = db.execute("SELECT * FROM books").fetchall()
+    allWords = searchMode == "True"
     matchedBooks = []
     for bk in books:
-        lbk = list(bk)
-        lbk.append(0) 
-        allWords = False
         matches = 0 
         matchesPrev = 0 
         count = len (searchTerms)
@@ -116,17 +123,25 @@ def booksSearch():
                 count-=1
                 matchesPrev = matches
         if matches:
-            # find AnyWord (OR) or AllWords (AND)
+            # find anyWord (OR) or allWords (AND)
             if (not allWords) or (count == 0):
-                lbk[5] = matches
-                matchedBooks.append (lbk)
+                matchedBooks.append ([{"id":bk.id,"isbn":bk.isbn,"title":bk.title, "author":bk.author,"year":bk.year},matches])
 
-    m = np.array(matchedBooks)
-    # Sort indexes
-    indexes = np.argsort(m[:,-1])
-    # Sort matrix rows by indexes, in inverse orden (-1)
-    sortedBooks = m[indexes,:][::-1]
-    return render_template("books.html",books=sortedBooks.tolist())
+    sortedBooks = []            
+    if matchedBooks:
+        m = np.array(matchedBooks)
+        # Sort indexes
+        indexes = np.argsort(m[:,-1])
+        # Sort matrix rows by indexes / [::-1,:1:] In inverse order for all rows (-1) and returning only colum 0
+        sortedBooks = m[indexes,:][::-1,:1:]
+        # Returns a siple list of diccionaries (a non numpy list)
+        sortedBooks = sortedBooks[:,0].tolist()
+    
+    results = len(sortedBooks)
+    msg = f"{results} books found. "
+    if not results:
+        msg +="Change your parameters or search terms and try again"
+    return render_template("books.html",books=sortedBooks, searchTerms=searchTermsStr,allWords=allWords, msg=msg)
     #return redirect(url_for("books"))
     
 @app.route("/booktab/<string:book_id>",methods=["POST","GET"])
