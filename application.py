@@ -1,9 +1,10 @@
 import flask
+import requests
 import os, re
-import ahocorasick
+import json
 import numpy as np
 
-from flask import Flask, session, render_template, request,  redirect, url_for 
+from flask import Flask, session, render_template, request, redirect, url_for 
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -27,7 +28,7 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/",methods=["GET"])
 def index ():
-    # If there is an active session for user
+    # If there is an user active session
     if session.get ("username"): # != None
         username = session['username']
         if not session.get ("books"):
@@ -80,32 +81,41 @@ def saveRegistration():
 
 @app.route("/books",methods=["GET"])
 def books():
-    return render_template("books.html",books=None)
+
+    # Get the session varaibles for rendering a list of matched books or an empty list (if not matching or first time on the page)
+    searchTermsStr = ""
+    searchAllWords = False
+    searchResults = []
+    if session.get ("searchTermsStr"):
+        searchTermsStr = session["searchTermsStr"]
+        searchAllWords = session["searchAllWords"]
+        searchResults = session["searchResults"]
+
+        numResults = len(searchResults)
+        msg = f"{numResults} books found. "
+        if not numResults:
+            msg +="Change your parameters or search terms and try again"
+    else: # First access to this page
+        msg = "There are thousands of books among which you can find those of your preferences."
+
+    # Render a sorted list of dictionaries - Sorted according to the relevance of the results
+    return render_template("books.html",books=searchResults, searchTerms=searchTermsStr,allWords=searchAllWords, msg=msg)
 
 
 @app.route("/books_search",methods=["POST"])
 def booksSearch():
 
+    # Get the list of books from DB, recovered at user login 
     books=[]
     if session.get ("books"):
         books = session["books"]
+
+    allWords = (request.form.get ('searchMode') == "allWords")
 
     searchTermsStr = request.form.get ('searchTerms')
     searchTerms = re.sub ("[^a-z0-9_ ]","",searchTermsStr.lower())
     searchTerms = searchTerms.split (" ")
 
-    searchMode = request.form.get ('searchMode')
-
-    # Optimal search from solution in: 
-    # https://stackoverflow.com/questions/34816775/python-optimal-search-for-substring-in-list-of-strings
-    '''
-    auto = ahocorasick.Automaton() 
-    for word in searchTerms:
-        auto.add_word(word, word)
-    auto.make_automaton()
-    '''
-
-    allWords = searchMode == "True"
     matchedBooks = []
     for bk in books:
         matches = 0 
@@ -136,21 +146,33 @@ def booksSearch():
         sortedBooks = m[indexes,:][::-1,:1:]
         # Returns a siple list of diccionaries (a non numpy list)
         sortedBooks = sortedBooks[:,0].tolist()
+
+    # Set the appropiate session variables
+    session["searchTermsStr"] = searchTermsStr
+    session["searchAllWords"] = allWords
+    session["searchResults"] = sortedBooks
     
-    results = len(sortedBooks)
-    msg = f"{results} books found. "
-    if not results:
-        msg +="Change your parameters or search terms and try again"
-    return render_template("books.html",books=sortedBooks, searchTerms=searchTermsStr,allWords=allWords, msg=msg)
-    #return redirect(url_for("books"))
+    return redirect(url_for('books'))
+
     
-@app.route("/booktab/<string:book_id>",methods=["POST","GET"])
+@app.route("/booktab/<int:book_id>",methods=["GET"])
 def booktab(book_id):
 
-    book = db.execute("SELECT * FROM books WHERE id = :id", {"id": int(book_id)}).fetchone()
+    book = db.execute("SELECT * FROM books WHERE id = :id", {"id": book_id}).fetchone()
     if book is None:
-        return render_template("error.html", message="Invalid book number.")
-    return render_template("booktab.html",book=book)
+        raise Exception('Invalid book number: {}'.format(book_id))
+
+    # Get gooreads book rating
+    headers = {"content-type": "application/json"}
+    r = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "ZR0Vn8jaLessV6NJqMdPTA", "isbns": book.isbn}, headers=headers)
+
+    if r.status_code == 200:
+        bookInfo= r.json()
+         # Get the firts (the only) element in list: a dict.
+        bookInfo = bookInfo['books'].pop()
+        goodreadsRating = {"work_ratings_count":bookInfo["work_ratings_count"], "average_rating":bookInfo["average_rating"] }
+    else:
+        # Service unavailable
+        goodreadsRating = {"work_ratings_count":"-1", "average_rating":-1 }
     
-
-
+    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating)

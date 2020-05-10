@@ -27,6 +27,20 @@
         </tr>
     </table>
 
+    {% if goodreadsRating.work_ratings_count == -1 %}
+    <p>
+        Goodreads rating service unavailable at the momento. Please try later.
+    </p>
+    {% else %}
+    <p>
+        Goodreads number of ratings: {{goodreadsRating.work_ratings_count}}
+    </p>
+    <p>
+        Average rating: {{goodreadsRating.average_rating}}
+    </p>
+    {% endif %}
+
+
     <a href="{{ url_for('books') }}">Back</a>
 
 {% endblock %}
