@@ -29,14 +29,14 @@
     </form>
     <hr>
     <br>
+    <h2>List of books:</h2>
+    <br>
+        {{ msg }}
+    <br>
     <ol>
-        <h2>List of books:</h2>
-        <br>
-            {{ msg }}
-        <br>
         {% if books %}
         {% for book in books %}
-        <li><a id="id_{{book.id}}" href="{{ url_for('booktab',book_id=book.id) }}">{{book.isbn}} / {{book.title}} / {{book.author}} / {{book.year}}</a></li>
+        <li><a id="id_{{book.id}}" href="{{ url_for('booktab',bookId=book.id) }}">{{book.isbn}} / {{book.title}} / {{book.author}} / {{book.year}}</a></li>
         {% endfor %}
         {% endif %}
     </ol>

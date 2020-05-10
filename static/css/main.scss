@@ -44,9 +44,23 @@ small {
 	font-family:inherit;
 }
 
-/* Classes */
+/*********** Classes **************/
 
-/* SCSS nesting */
+/* Rating */
+.rating {
+    float: left;
+}
+.rating span {
+    font-size: 16px;
+    cursor: pointer;
+    float: right;
+}
+
+.rating span:hover, .rating span:hover ~ span{
+    color: red;
+}
+
+/**/ 
 .MyContainer {
 		margin: 0 $MarginContainer;
 		padding: 1px;
@@ -59,7 +73,7 @@ small {
 	background-color: #d2d2d2;
 }
 
-/* *IDs */
+/* IDs */
 #message_zone {
  	  margin: 2px $MarginContainer - 1;
 		padding: 0.5em 0.5em 0 0.5em;

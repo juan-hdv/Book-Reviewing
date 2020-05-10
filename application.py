@@ -45,9 +45,12 @@ def login():
     username = request.form.get ('username')
     password = request.form.get ('password')
     # Make sure username exist and password is correct
-    if db.execute("SELECT * FROM users WHERE usr = :usr AND pass = :pwd", {"usr": username, "pwd":password}).rowcount != 0:
-        session["username"] = username
+    user = db.execute("SELECT * FROM users WHERE usr = :usr AND pass = :pwd", {"usr": username, "pwd":password}).first()
+    if user:
+        session["userId"] = user.id
+        session["username"] = user.name
         return redirect(url_for("index"))
+
     return render_template("login.html", msgType="alert-danger", #bootstrap alert
                                          msgText="Invalid user or password! Try again.")
 
@@ -155,16 +158,26 @@ def booksSearch():
     return redirect(url_for('books'))
 
     
-@app.route("/booktab/<int:book_id>",methods=["GET"])
-def booktab(book_id):
+@app.route("/booktab/<int:bookId>",methods=["GET"])
+def booktab(bookId):
+    # Get book info, including the user review and rating if present
+    book = db.execute("SELECT * FROM books as b \
+        LEFT JOIN reviews as r ON r.bookId = b.id AND r.userId = :userId \
+        WHERE b.id = :bookId",{"userId":session["userId"],"bookId":bookId}).fetchone()
 
-    book = db.execute("SELECT * FROM books WHERE id = :id", {"id": book_id}).fetchone()
+    # book = db.execute("SELECT * FROM books WHERE id = :id", {"id": bookId}).fetchone()
     if book is None:
-        raise Exception('Invalid book number: {}'.format(book_id))
+        raise Exception(f'Invalid book number: {bookId}')
 
+    userReview = {"text": book.txt, "rating": book.rating}
+    goodreadsRating = getGoodreadsRating (book.isbn)
+
+    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating, userReview=userReview)
+
+def getGoodreadsRating (isbn):
     # Get gooreads book rating
     headers = {"content-type": "application/json"}
-    r = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "ZR0Vn8jaLessV6NJqMdPTA", "isbns": book.isbn}, headers=headers)
+    r = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "ZR0Vn8jaLessV6NJqMdPTA", "isbns": isbn}, headers=headers)
 
     if r.status_code == 200:
         bookInfo= r.json()
@@ -173,6 +186,23 @@ def booktab(book_id):
         goodreadsRating = {"work_ratings_count":bookInfo["work_ratings_count"], "average_rating":bookInfo["average_rating"] }
     else:
         # Service unavailable
-        goodreadsRating = {"work_ratings_count":"-1", "average_rating":-1 }
-    
-    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating)
+        goodreadsRating = {"work_ratings_count":-1, "average_rating":-1 }
+    return goodreadsRating
+
+
+@app.route("/book_review",methods=["POST"])
+def bookReview():
+    # PRE: user_rating cannot be None / user_rating can be "" 
+    userId = session["userId"]
+    bookId = request.form.get ('book_id')
+    userReview = request.form.get ('user_review')
+    userRating = request.form.get ('user_rating')
+
+    # DO A POSTGRESS UPSERT
+    db.execute ("INSERT INTO reviews (bookId,userId,txt,rating) VALUES (:bookId, :userId, :userReview, :userRating) \
+        ON CONFLICT (bookId, userId) DO \
+        UPDATE SET (txt,rating) = (:userReview, :userRating)",
+        {"bookId":bookId, "userId":userId, "userReview":userReview, "userRating":userRating})
+    db.commit()
+
+    return redirect (url_for("booktab",bookId=bookId))

@@ -11,6 +11,11 @@ aside {
   background-color: #f2f2f2;
   border: 3px inset #a5bcc9; }
 
+header {
+  color: #fff;
+  background-color: #3B75CC;
+  padding: 1em; }
+
 footer {
   color: #fff;
   background-color: #16a085;
@@ -29,8 +34,20 @@ small {
   font-size: 0.7em;
   font-family: inherit; }
 
-/* Classes */
-/* SCSS nesting */
+/*********** Classes **************/
+/* Rating */
+.rating {
+  float: left; }
+
+.rating span {
+  font-size: 16px;
+  cursor: pointer;
+  float: right; }
+
+.rating span:hover, .rating span:hover ~ span {
+  color: red; }
+
+/**/
 .MyContainer {
   margin: 0 5%;
   padding: 1px; }
@@ -40,14 +57,13 @@ small {
 .ColorGrid {
   background-color: #d2d2d2; }
 
-/* *IDs */
+/* IDs */
 #message_zone {
   margin: 2px 4%;
   padding: 0.5em 0.5em 0 0.5em;
   border: 1px solid #a5bcc9;
   text-align: center;
-  font-style: italic;
-  }
+  font-style: italic; }
 
 /* MEDIA RULES */
 @media screen and (max-width: 600px) {
