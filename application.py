@@ -192,17 +192,25 @@ def getGoodreadsRating (isbn):
 
 @app.route("/book_review",methods=["POST"])
 def bookReview():
-    # PRE: user_rating cannot be None / user_rating can be "" 
+    # PRE: user_rating cannot be None / user_review can be "" 
+
     userId = session["userId"]
     bookId = request.form.get ('book_id')
     userReview = request.form.get ('user_review')
     userRating = request.form.get ('user_rating')
+    action = request.form.get ('buttonAction')
 
-    # DO A POSTGRESS UPSERT
-    db.execute ("INSERT INTO reviews (bookId,userId,txt,rating) VALUES (:bookId, :userId, :userReview, :userRating) \
-        ON CONFLICT (bookId, userId) DO \
-        UPDATE SET (txt,rating) = (:userReview, :userRating)",
-        {"bookId":bookId, "userId":userId, "userReview":userReview, "userRating":userRating})
+    if action in "update":
+        # DO A POSTGRESS UPSERT
+        db.execute ("INSERT INTO reviews (bookId,userId,txt,rating) VALUES (:bookId, :userId, :userReview, :userRating) \
+            ON CONFLICT (bookId, userId) DO \
+            UPDATE SET (txt,rating) = (:userReview, :userRating)",
+            {"bookId":bookId, "userId":userId, "userReview":userReview, "userRating":userRating})
+    elif action in "delete":
+        db.execute ("DELETE FROM reviews WHERE bookId = :bookId AND userId = :userId",
+            {"bookId":bookId, "userId":userId})
+    else:
+        raise Exception(f'Invalid operation - Unknown botton action: {action}')        
     db.commit()
 
     return redirect (url_for("booktab",bookId=bookId))
