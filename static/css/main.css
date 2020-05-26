@@ -1,4 +1,9 @@
 /* HTML5 selectors */
+body {
+  margin: 0;
+  padding: 0;
+  background: #fefefe; }
+
 article {
   color: #000;
   background-color: #a5bcc9; }
@@ -12,58 +17,53 @@ aside {
   border: 3px inset #a5bcc9; }
 
 header {
+  height: 100px;
+  padding: 1em 0 1em 0;
   color: #fff;
   background-color: #3B75CC;
-  padding: 1em; }
+  margin-bottom: 1em; }
+  header img {
+    width: 64px;
+    height: 64px;
+    float: left; }
 
 footer {
   color: #fff;
   background-color: #16a085;
-  padding: 1em; }
+  padding: 1em;
+  margin-top: 1em; }
 
-img {
-  margin: 10px auto;
-  width: 100%;
-  display: block; }
-
-a:hover {
-  color: #096e87; }
-
-/* New selectors */
 small {
-  font-size: 0.7em;
-  font-family: inherit; }
+  font-size: 0.8em; }
+
+booktab table td.fieldname {
+  width: 150px; }
+booktab table td.fieldvalue h3 {
+  font-weight: normal; }
 
 /*********** Classes **************/
-/* Rating */
-.rating {
-  float: left; }
-
-.rating span {
-  font-size: 16px;
-  cursor: pointer;
-  float: right; }
-
-.rating span:hover, .rating span:hover ~ span {
-  color: red; }
+.clear {
+  clear: both;
+  display: block;
+  height: 1em;
+  line-height: 1em; }
 
 /**/
 .MyContainer {
   margin: 0 5%;
   padding: 1px; }
-  .MyContainer .row {
-    border: 1px solid #a5bcc9; }
 
 .ColorGrid {
   background-color: #d2d2d2; }
 
 /* IDs */
 #message_zone {
-  margin: 2px 4%;
-  padding: 0.5em 0.5em 0 0.5em;
-  border: 1px solid #a5bcc9;
-  text-align: center;
-  font-style: italic; }
+  padding-top: 20px;
+  font-style: italic;
+  /*	text-align: center; */ }
+
+#login input {
+  width: 280px; }
 
 /* MEDIA RULES */
 @media screen and (max-width: 600px) {
@@ -78,6 +78,48 @@ small {
     font-size: 90%; }
 
   h3 {
-    font-size: 80%; } }
+    font-size: 80%; }
+
+  .col-xs-0 hr, .col-sm-0 hr {
+    visibility: hidden; } }
+/***********************************/
+.raitingContent {
+  width: auto;
+  display: table;
+  margin-top: 20px;
+  margin-bottom: 20px; }
+
+.ratingBox {
+  background-color: #fff;
+  padding: 30px 70px;
+  /* Top-Bottom Right-Left */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 10px 10px #E0E0E0; }
+
+.productRating {
+  font-size: 50px; }
+
+/* Rating */
+.starsBox i:hover {
+  cursor: pointer;
+  font-size: 18px; }
+.starsBox span#clearButton {
+  padding-left: 1em; }
+
+.starsBox#getUserRating {
+  display: inline; }
+
+i.checked {
+  font-size: 18px;
+  color: #28a745; }
+
+.ratingText {
+  margin-top: 10px; }
+
+.ratingTitle {
+  color: #7fb67b;
+  font-weight: bold; }
+
+/**/
 
 /*# sourceMappingURL=main.css.map */

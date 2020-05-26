@@ -5,28 +5,38 @@
 {% endblock %}
 
 {% block body %}
-<h1>User Login</h1>
 
-<form action="{{ url_for('login') }}" method="post">
+<div id="login">
 
-    <div class="form-group">
-        <input class="form-control" name="username" placeholder="Username" required>
+    <div class="row">
+        <div class="col-xs-1 col-sm-2 col-md-3 col-lg-4"> 
+        </div>
+        <div class="col-xs-10 col-sm-8 col-md-6 col-lg-4">
+
+            <h2>User Login</h2>
+            <form action="{{ url_for('login') }}" method="post">
+
+                <div class="form-group">
+                    <input class="form-control" name="username" placeholder="Username" size=25 required>
+                </div>
+
+                <div class="form-group">
+                    <input class="form-control" name="password" type="password"  placeholder="Password" size=25 required>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-primary" style="float:left; margin-right: 1em">Login</button>
+                    <p>If you do not have an account, please register <a href="{{ url_for('register') }}">here</a></p>
+                </div>
+            </form>
+            <div id="message_zone">
+                <div class="alert {{ msgType }}" role="alert">{{ msgText }}</div>
+            </div>
+        </div>
+        <div class="col-xs-1 col-sm-2 col-md-3 col-lg-4">
+        </div>
     </div>
 
-    <div class="form-group">
-        <input class="form-control" name="password" type="password"  placeholder="Password" required>
-    </div>
-
-    <div class="form-group">
-        <button class="btn btn-primary">Login</button>
-    </div>
-
-</form>
-<div id="message_zone1">
-    <div class="alert {{ msgType }}" role="alert">
-    {{ msgText }}
-    </div>
 </div>
 
-<p>If you do not have an account, please register <a href="{{ url_for('register') }}">here</a></p>
 {% endblock %}

@@ -3,14 +3,43 @@ import requests
 import os, re
 import json
 import numpy as np
+import decimal
 
-from flask import Flask, session, render_template, request, redirect, url_for 
+from flask import Flask, session, render_template, request, redirect, url_for, abort 
 from flask_session import Session
+from flask import jsonify
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
 from datetime import timedelta
 
+from security import *
+
 app = Flask(__name__)
+
+# To avoid "TypeError: Object of type Decimal is not JSON serializable"
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return str(o)
+        return super(DecimalEncoder, self).default(o)
+
+
+#########################
+#   ERROR HANDLERS
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('http_error404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('http_error403.html'), 403
+
+app.register_error_handler(404, page_not_found)
+app.register_error_handler(403, forbidden)
+#########################
+
 
 # Check for environment variable
 if not os.getenv("DATABASE_URL"): 
@@ -36,7 +65,7 @@ def index ():
         return redirect(url_for('books'))
     else:
         return render_template("login.html", msgType="alert-light", #bootstrap alert
-                                             msgText="Please type your username and password")
+                                             msgText="Please type your username and password.")
             
 
 @app.route("/login",methods=["POST"])
@@ -45,11 +74,12 @@ def login():
     username = request.form.get ('username')
     password = request.form.get ('password')
     # Make sure username exist and password is correct
-    user = db.execute("SELECT * FROM users WHERE usr = :usr AND pass = :pwd", {"usr": username, "pwd":password}).first()
+    user = db.execute("SELECT * FROM users WHERE usr = :usr", {"usr": username}).first()
     if user:
-        session["userId"] = user.id
-        session["username"] = user.name
-        return redirect(url_for("index"))
+        if check_encrypted_password(password, user.passw):
+            session["userId"] = user.id
+            session["username"] = user.name
+            return redirect(url_for("index"))
 
     return render_template("login.html", msgType="alert-danger", #bootstrap alert
                                          msgText="Invalid user or password! Try again.")
@@ -72,14 +102,17 @@ def saveRegistration():
     user = request.form.get ('user')
     password = request.form.get ('password')
 
+    # Encrypt password
+    password = encrypt_password (password)
+
     # Make sure username does not exist
     if db.execute("SELECT * FROM users WHERE usr = :usr", {"usr": user}).rowcount != 0:
         return render_template("error.html", message="Username is not available. Please use a diffent username.")
-    db.execute("INSERT INTO users (name, email, usr, pass) VALUES (:name, :email, :user, :password)",
+    db.execute("INSERT INTO users (name, email, usr, passw) VALUES (:name, :email, :user, :password)",
             {"name": name, "email": email, "user":user, "password":password})
     db.commit()
     return render_template("login.html", msgType="alert-success", #bootstrap alert
-                                         msgText="Please type your username and password")
+                                         msgText="Registration successful. Please type your username and password.")
 
 
 @app.route("/books",methods=["GET"])
@@ -95,9 +128,9 @@ def books():
         searchResults = session["searchResults"]
 
         numResults = len(searchResults)
-        msg = f"{numResults} books found. "
+        msg = f"[ {numResults} books found ]"
         if not numResults:
-            msg +="Change your parameters or search terms and try again"
+            msg +="Change your search terms or the parameters and try again."
     else: # First access to this page
         msg = "There are thousands of books among which you can find those of your preferences."
 
@@ -159,7 +192,7 @@ def booksSearch():
 
     
 @app.route("/booktab/<int:bookId>",methods=["GET"])
-def booktab(bookId):
+def booktab(bookId, updated=0):
     # Get book info, including the user review and rating if present
     book = db.execute("SELECT * FROM books as b \
         LEFT JOIN reviews as r ON r.bookId = b.id AND r.userId = :userId \
@@ -172,13 +205,21 @@ def booktab(bookId):
     userReview = {"text": book.txt, "rating": book.rating}
     goodreadsRating = getGoodreadsRating (book.isbn)
 
-    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating, userReview=userReview)
+    # updated parameter is Set to 1 when bookReview() redirects here
+    updated = request.args.get('updated');
+    if updated:
+        msgType ="alert-success"
+        msgText = "Your rating and review have been updated."
+    else:
+        msgType = msgText = ""
+
+    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating, userReview=userReview,
+                                          msgType=msgType, msgText=msgText)
 
 def getGoodreadsRating (isbn):
     # Get gooreads book rating
     headers = {"content-type": "application/json"}
     r = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "ZR0Vn8jaLessV6NJqMdPTA", "isbns": isbn}, headers=headers)
-
     if r.status_code == 200:
         bookInfo= r.json()
          # Get the firts (the only) element in list: a dict.
@@ -213,4 +254,33 @@ def bookReview():
         raise Exception(f'Invalid operation - Unknown botton action: {action}')        
     db.commit()
 
-    return redirect (url_for("booktab",bookId=bookId))
+    return redirect (url_for("booktab",bookId=bookId, updated=1))
+
+
+@app.route("/api/<string:isbn>",methods=["GET"])
+def apiGetISBN(isbn,):
+    # Get book info, including the user review and rating if present
+    book = db.execute("SELECT b.*, AVG(r.rating) as average_score, COUNT(*) as review_count FROM books as b \
+        JOIN reviews as r ON r.bookId = b.id \
+        WHERE b.isbn = :bookIsbn \
+        GROUP BY b.id",{"bookIsbn":isbn}).fetchone()
+
+    # book = db.execute("SELECT * FROM books WHERE id = :id", {"id": bookId}).fetchone()
+    if book is None:
+        abort(404, description=f"Resource not found - ISBN: {isbn}")
+
+    response = {"title": book.title,
+                "author": book.author,
+                "year": book.year,
+                "isbn": book.isbn,
+                "review_count": book.review_count,
+                "average_score": round (book.average_score,2)}
+
+    return json.dumps(response,indent=4, sort_keys=False, cls=DecimalEncoder)
+
+
+'''
+if __name__ == '__main__':
+    app.debug = True
+    app.run(host = '0.0.0.0',port=5000)
+'''

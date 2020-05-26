@@ -5,13 +5,14 @@
 {% endblock %}
 
 {% block body %}
+    [&nbsp;<a href="{{ url_for('index') }}">Back</a>&nbsp;]
     <h1>User Registration</h1>
 
     <form action="{{ url_for('saveRegistration') }}" method="post">
 
         <div class="form-group">
-        </div>
             <input class="form-control" name="name" placeholder="Your name" required>
+        </div>
 
         <div class="form-group">
             <input class="form-control" name="email" type="email" placeholder="Email" required>
@@ -26,9 +27,8 @@
         </div>
 
         <div class="form-group">
-            <button class="btn btn-primary">Login</button>
+            <button class="btn btn-primary">Register</button>
         </div>
 
     </form>
-    <p>If you do not have an account, please register <a href="{{ url_for('register') }}">here</a></p>
 {% endblock %}
