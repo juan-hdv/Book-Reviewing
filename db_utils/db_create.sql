@@ -1,3 +1,20 @@
+/*
+Tables 
+    books:  a list of books with id, isbn, title, author and year
+    users:  a list of system users with id, name, email, user and password
+    review: a list of reviews. Each review corresponds to a book (id) and is made by an user (id).
+            The composed key of this table is made of the keys from tables users and books.
+
+    Some restrictions have been defined for:
+        - book year: a year between 1000 and 3000
+        - users email: alphanumeric name (plus ._%-), then the @ symbol, then an alphanumeric domain name
+        - uisers username: alphanumeric
+
+    Som constrains have been defined for reviews table
+        - When a book (id) is deleted/updated, delete/update all the associated reviews (bookId)
+        - When a user (id) is deleted/updated, delete/update all the associated reviews (userId)
+
+*/
 DROP TABLE reviews;
 DROP TABLE books;
 DROP TABLE users;
