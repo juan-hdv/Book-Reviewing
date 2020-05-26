@@ -3,3 +3,6 @@ Flask-Session
 psycopg2-binary
 SQLAlchemy
 passlib
+numpy
+requests
+timedelta
