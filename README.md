@@ -1,6 +1,7 @@
 # PROJECT 1 - Web Programming with Python and JavaScript
 
-**Author:** 			Juan Gabriel Mejía 
+**Author:** 			Juan Gabriel Mejía
+
 **Date (yyyy-mm-dd):**	2020-05-25
 
 
