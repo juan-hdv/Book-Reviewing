@@ -4,6 +4,12 @@
     Books search
 {% endblock %}
 
+{% block user %}
+    {% if user %}
+        Hello {{ user }}
+    {% endif %}
+{% endblock %}
+
 {% block body %}
 	[&nbsp;<a href="{{	url_for('logout') }}">logout</a>&nbsp;]
 	<br><br>
@@ -38,7 +44,7 @@
     <ol>
         {% if books %}
         {% for book in books %}
-        <li><a id="id_{{book.id}}" href="{{ url_for('booktab',bookId=book.id) }}">{{book.author}} ({{book.year}}). <i>{{book.title}}</i>.<small>ISBN: {{book.isbn}}</small></a></li>
+        <li><a id="id_{{book.id}}" href="{{ url_for('booktab',bookId=book.id) }}">{{book.author}} ({{book.year}}). <i>{{book.title}}</i>. <small>ISBN: {{book.isbn}}</small></a></li>
         {% endfor %}
         {% endif %}
     </ol>

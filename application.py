@@ -57,8 +57,7 @@ db = scoped_session(sessionmaker(bind=engine))
 @app.route("/",methods=["GET"])
 def index ():
     # If there is an user active session
-    if session.get ("username"): # != None
-        username = session['username']
+    if session.get ("userId"): # != None
         if not session.get ("books"):
             session["books"] = db.execute("SELECT * FROM books").fetchall()
         return redirect(url_for('books'))
@@ -77,7 +76,7 @@ def login():
     if user:
         if check_encrypted_password(password, user.passw):
             session["userId"] = user.id
-            session["username"] = user.name
+            session["nameuser"] = user.name
             return redirect(url_for("index"))
 
     return render_template("login.html", msgType="alert-danger", #bootstrap alert
@@ -106,7 +105,7 @@ def saveRegistration():
 
     # Make sure username does not exist
     if db.execute("SELECT * FROM users WHERE usr = :usr", {"usr": user}).rowcount != 0:
-        return render_template("error.html", message="Username is not available. Please use a diffent username.")
+        return render_template("error.html", message=f"Username ({user}) is not available. Please use a different username.")
     db.execute("INSERT INTO users (name, email, usr, passw) VALUES (:name, :email, :user, :password)",
             {"name": name, "email": email, "user":user, "password":password})
     db.commit()
@@ -134,7 +133,7 @@ def books():
         msg = "There are thousands of books among which you can find those of your preferences."
 
     # Render a sorted list of dictionaries - Sorted according to the relevance of the results
-    return render_template("books.html",books=searchResults, searchTerms=searchTermsStr,allWords=searchAllWords, msg=msg)
+    return render_template("books.html",books=searchResults, searchTerms=searchTermsStr,allWords=searchAllWords, msg=msg, user=session.get ("nameuser"))
 
 
 @app.route("/books_search",methods=["POST"])
@@ -193,16 +192,19 @@ def booksSearch():
 @app.route("/booktab/<int:bookId>",methods=["GET"])
 def booktab(bookId, updated=0):
     # Get book info, including the user review and rating if present
-    book = db.execute("SELECT * FROM books as b \
+    bookInfo = db.execute("SELECT * FROM books as b \
         LEFT JOIN reviews as r ON r.bookId = b.id AND r.userId = :userId \
         WHERE b.id = :bookId",{"userId":session["userId"],"bookId":bookId}).fetchone()
-
-    # book = db.execute("SELECT * FROM books WHERE id = :id", {"id": bookId}).fetchone()
-    if book is None:
+    if bookInfo is None:
         raise Exception(f'Invalid book number: {bookId}')
 
-    userReview = {"text": book.txt, "rating": book.rating}
-    goodreadsRating = getGoodreadsRating (book.isbn)
+    userReview = {"text": bookInfo.txt, "rating": bookInfo.rating}
+    goodreadsRating = getGoodreadsRating (bookInfo.isbn)
+
+    # Get book ALL reviews and ratings (if present) from other users
+    bookReviews = db.execute("SELECT r.*, u.name as nameuser FROM reviews as r \
+        JOIN users as u ON r.userId = u.id \
+        WHERE bookId = :bookId AND userId <> :userId",{"bookId":bookId,"userId":session["userId"]}).fetchall()
 
     # updated parameter is Set to 1 when bookReview() redirects here
     updated = request.args.get('updated');
@@ -212,8 +214,9 @@ def booktab(bookId, updated=0):
     else:
         msgType = msgText = ""
 
-    return render_template("booktab.html",book=book, goodreadsRating=goodreadsRating, userReview=userReview,
-                                          msgType=msgType, msgText=msgText)
+    return render_template("booktab.html",book=bookInfo, goodreadsRating=goodreadsRating, 
+                                        userReview=userReview, bookReviews = bookReviews,
+                                        msgType=msgType, msgText=msgText, user=session.get ("nameuser"))
 
 def getGoodreadsRating (isbn):
     # Get gooreads book rating
@@ -259,21 +262,25 @@ def bookReview():
 @app.route("/api/<string:isbn>",methods=["GET"])
 def apiGetISBN(isbn,):
     # Get book info, including the user review and rating if present
-    book = db.execute("SELECT b.*, AVG(r.rating) as average_score, COUNT(*) as review_count FROM books as b \
-        JOIN reviews as r ON r.bookId = b.id \
+    book = db.execute("SELECT b.*, AVG(r.rating) as average_score, COUNT(r.bookId) as review_count FROM books as b \
+        LEFT JOIN reviews as r ON r.bookId = b.id \
         WHERE b.isbn = :bookIsbn \
         GROUP BY b.id",{"bookIsbn":isbn}).fetchone()
 
-    # book = db.execute("SELECT * FROM books WHERE id = :id", {"id": bookId}).fetchone()
+    # book doesn't exit
     if book is None:
         abort(404, description=f"Resource not found - ISBN: {isbn}")
+
+
+    # If the book has no reviews, then set average to 0
+    average_score = 0.0 if book.review_count==0 else book.average_score
 
     response = {"title": book.title,
                 "author": book.author,
                 "year": book.year,
                 "isbn": book.isbn,
                 "review_count": book.review_count,
-                "average_score": round (book.average_score,2)}
+                "average_score": round (average_score,2)}
 
     return json.dumps(response,indent=4, sort_keys=False, cls=DecimalEncoder)
 
