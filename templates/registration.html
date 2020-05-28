@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    User Registration
+{% endblock %}
+
+{% block body %}
+    [&nbsp;<a href="{{ url_for('index') }}">Back</a>&nbsp;]
+    <h1>User Registration</h1>
+
+    <form action="{{ url_for('saveRegistration') }}" method="post">
+
+        <div class="form-group">
+            <input class="form-control" name="name" placeholder="Your name" required>
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" name="email" type="email" placeholder="Email" required>
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" name="user" placeholder="User name" required>
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" name="password" type="password"  placeholder="Password" required>
+        </div>
+
+        <div class="form-group">
+            <button class="btn btn-primary">Register</button>
+        </div>
+
+    </form>
+{% endblock %}

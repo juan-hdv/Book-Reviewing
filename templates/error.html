@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Error
+{% endblock %}
+
+{% block body %}
+	<h1>Application Error</h1>
+	<br>
+	<div id="message_zone">
+	    <div class="alert alert-danger" role="alert">{{ message }}.</div>
+	</div>
+	<br>
+	<p><a href="{{ url_for('register') }}">Go back...</a>
+	<br><br>
+{% endblock %}

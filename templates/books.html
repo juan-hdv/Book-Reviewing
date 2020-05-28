@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Books search
+{% endblock %}
+
+{% block user %}
+    {% if user %}
+        Hello {{ user }}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+	[&nbsp;<a href="{{	url_for('logout') }}">logout</a>&nbsp;]
+	<br><br>
+    <h2>Search books</h2>
+
+    <form action="{{ url_for('booksSearch') }}" method="post">
+        <div class="form-group">
+            <label for="searchTerms">Search for</label>
+            <input class="form-control" id="searchTerms" name="searchTerms" placeholder="Type ISBN, Title or Author" value="{{ searchTerms }}" required>
+        </div>
+
+        <div class="form-group float-left">
+            <button class="btn btn-primary">Search</button>&nbsp;&nbsp;&nbsp;
+        </div>
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="searchMode" id="sm2" value="anyWord" {% if not allWords %}checked{% endif %}>
+            <label class="form-check-label" for="sm2">Any word</label>
+        </div>  
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="searchMode" id="sm1" value="allWords" {% if allWords %}checked{% endif %}>
+            <label class="form-check-label" for="sm1">All words</label>
+        </div>  
+
+    </form>
+    <br class="clear">
+    <br>
+    <h2>List of books:</h2>
+    <hr>
+        {{ msg }}
+    <br><br>
+    <ol>
+        {% if books %}
+        {% for book in books %}
+        <li><a id="id_{{book.id}}" href="{{ url_for('booktab',bookId=book.id) }}">{{book.author}} ({{book.year}}). <i>{{book.title}}</i>. <small>ISBN: {{book.isbn}}</small></a></li>
+        {% endfor %}
+        {% endif %}
+    </ol>
+    <br>
+{% endblock %}

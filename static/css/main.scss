@@ -1,0 +1,167 @@
+$MainColor: #a5bcc9;
+$MarginContainer: 5%;
+
+/* HTML5 selectors */
+body {
+     margin: 0;
+     padding: 0;
+     background: #fefefe
+}
+
+article {
+	color: #000;
+	background-color: $MainColor;
+}
+
+aside {
+	/*
+	color: #fff;
+	background-color: #c0392b
+	*/
+	background-color: #f2f2f2;
+	border: 3px inset $MainColor;
+}
+
+header {
+	height: 100px;
+	padding:1em 0 1em 0;
+	color: #fff;
+	background-color: #3B75CC;
+	margin-bottom:1em;
+	img {
+		width:64px;
+		height:64px;
+		float: left;
+	}
+}
+
+footer {
+	color: #fff;
+	background-color: #16a085;
+	padding: 1em;
+	margin-top: 1em;
+}
+
+small {
+	font-size: 0.8em;
+}
+
+booktab {
+	table {
+		td.fieldname {
+			width: 150px;
+		}
+		td.fieldvalue {
+			h3 { 
+				font-weight: normal; 
+			}
+		}
+	}
+}
+
+/*********** Classes **************/
+
+.clear {
+	clear: both;
+	display:block;
+	height: 1em;
+	line-height: 1em;
+}
+
+/**/ 
+.MyContainer {
+		margin: 0 $MarginContainer;
+		padding: 1px;
+}
+
+.ColorGrid {
+	background-color: #d2d2d2;
+}
+
+/* IDs */
+#message_zone {
+	padding-top: 20px;
+	font-style: italic;
+/*	text-align: center; */
+}
+#login {
+	input {
+		width: 280px;
+	}
+}
+
+/* MEDIA RULES */
+@media screen and (max-width: 600px) {
+	/* Inheritance */
+	%CommonTitles {
+		font-weight: bold;
+	}
+	h1 {
+		@extend %CommonTitles;
+		font-size: 110%;
+	}
+	h2 {
+		@extend %CommonTitles;
+		font-size: 90%;
+	}
+	h3 {
+		@extend %CommonTitles;
+		font-size: 80%;
+	}
+
+	.col-xs-0 hr, .col-sm-0 hr {
+		visibility: hidden;
+	}
+}
+
+
+/***********************************/
+
+.raitingContent {
+     width: auto;
+     display: table;
+     margin-top: 20px;
+     margin-bottom: 20px;
+ }
+
+.ratingBox {
+     background-color: #fff;
+     padding: 30px 70px; /* Top-Bottom Right-Left */
+     border: 1px solid rgba(0, 0, 0, 0.1);
+     box-shadow: 0px 10px 10px #E0E0E0
+ }
+
+.productRating {
+     font-size: 50px
+ }
+ /* Rating */
+.starsBox {
+	i:hover {
+		cursor: pointer;
+		font-size: 18px;
+	}
+	span#clearButton {
+		padding-left: 1em;
+	}
+}
+.starsBox#getUserRating {
+	display: inline;
+}
+
+i.checked {
+	font-size: 18px;
+ 	color: #28a745;
+}
+
+.ratingText {
+     margin-top: 10px
+ }
+
+.ratingTitle {
+     color: #7fb67b;
+     font-weight: bold; 
+ }
+ /**/ 
+
+
+

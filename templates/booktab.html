@@ -1,0 +1,144 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Book Tab
+{% endblock %}
+
+{% block user %}
+    {% if user %}
+        Hello {{ user }}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    [&nbsp;<a href="{{ url_for('books') }}">Back</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;<a href="{{	url_for('logout') }}">logout</a>&nbsp;]
+    <br><br>
+    <booktab>
+        <div class="row">
+            <div class="col-xs-12"> 
+                <h2>Booktab</h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-5 col-lg-5"> 
+                <table>
+                    <tr>
+                        <td class="fieldname"><h3>Title</h3></td>
+                        <td class="fieldvalue"><h3>{{ book.title }}</h3></td>
+                    </tr>
+                    <tr>
+                        <td class="fieldname"><h3>Author</h3></td>
+                        <td class="fieldvalue"><h3>{{ book.author }}</h3></td>
+                    </tr>
+                    <tr>
+                        <td class="fieldname"><h3>ISBN</h3> </td>
+                        <td class="fieldvalue"><h3>{{ book.isbn }}</h3></td>
+                    </tr>
+                    <tr>
+                        <td class="fieldname"><h3>Year</h3></td>
+                        <td class="fieldvalue"><h3>{{ book.year }}</h3></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="col-xs-12 col-sm-12 col-md-5 col-lg-5"> 
+                <!-- Goodreads rating -->
+                {% if goodreadsRating.work_ratings_count == -1 %}
+                <p>
+                    Goodreads rating service unavailable at the moment. Please try later.
+                </p>
+                {% else %}
+                <div class="raitingContent text-center">
+                    <div class="ratingBox"> 
+                        <div class="ratingTitle"> 
+                            Goodreads ratings
+                        </div>
+                        <span class="productRating">{{goodreadsRating.average_rating}}</span><span>/5</span>
+                        <div class="startsBox">
+                            {% set r1 = (goodreadsRating.average_rating|int) %}
+                            {% set r2 = 5 - r1 %}
+                            {% for k in range(r1) %}
+                            <i class="fa fa-star checked"></i>
+                            {% endfor %}
+
+                            {% for k in range(r2) %}
+                            <i class="fa fa-star"></i> 
+                            {% endfor %}
+                        </div>
+                        <div class="ratingText"> 
+                           Average based on {{ "{:,.0f}".format(goodreadsRating.work_ratings_count) }} reviews.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-5 col-lg-5"> 
+                <hr>
+            </div>
+            <div class="col-xs-0 col-sm-0 col-md-5 col-lg-5"> 
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-5 col-lg-5"> 
+                <!-- User rating -->
+                <form action="{{ url_for('bookReview') }}" method="post">
+
+                    <input name="book_id" value="{{ book.id }}" hidden>
+
+                    <div class="form-group">
+                        <span>Your rating:&nbsp;&nbsp;</span>
+                        <div class="starsBox" name="getUserRating" id="getUserRating">
+                            <i class="fa fa-star" data-rating=1></i> 
+                            <i class="fa fa-star" data-rating=2></i> 
+                            <i class="fa fa-star" data-rating=3></i> 
+                            <i class="fa fa-star" data-rating=4></i> 
+                            <i class="fa fa-star" data-rating=5></i> 
+                            <input class="form-control" name="user_rating" id="user_rating" type="number" value="{% if userReview != None %}{{ userReview.rating}}{% else %}5{% endif %}" hidden>
+                            <span id='clearButton'><button type="button" class="btn btn-secondary" id="clear">Clear</button></span>    
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="user_review">Write a review:</label>
+                        <textarea class="form-control" id="user_review" name="user_review" placeholder="" rows="3" required>{% if userReview != None and userReview.text != None %}{{ userReview.text}}{% endif %}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" name="buttonAction" value="update">Update</button>&nbsp;&nbsp;
+                        <button type="submit" class="btn btn-danger" name="buttonAction" value="delete">Delete</button>
+                    </div>
+                </form>
+                <div id="message_zone">
+                    <div class="alert {{ msgType }}" role="alert">{{ msgText }}</div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-12 col-md-5 col-lg-5">
+            </div>
+        </div>
+        {% if bookReviews %}
+        <div class="row">
+            <div class="col-xs-12"> 
+                <hr>
+                <h2>Other reader's reviews</h2>
+                <span style="margin-left:1.5em">#. Reader Name: "Review" (Rating/5)</span>
+                <br><br>
+                <ol>
+                    {% for review in bookReviews %}
+                    <li>{{ review.nameuser }}: "<small>{{review.txt}}</small>" ( <strong>{{ review.rating }}</strong>/<small>5</small> ) 
+                        {% for k in range(review.rating) %}
+                        <i class="fa fa-star checked"></i>
+                        {% endfor %}    
+                    </li>
+                    {% endfor %}
+                </ol>
+                <br>
+            </div>
+        </div>            
+        {% endif %}
+    </booktab>
+
+
+{% endblock %}
