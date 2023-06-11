@@ -6,7 +6,10 @@
 
 ## Description
 
-An utility for reviewing books. It displays a list of books, offers books search, shows a book information card with the book rating.
+An utility for reviewing books. It allows to load a lists of books from a csv file to a database. 
+It displays a list of books, offers books search, shows a book information card with the book rating.
+Allows giving starts and a comment as a review for a book.
+Provides an API to get book info.
 
 ## Environment Variables
 
