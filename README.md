@@ -4,6 +4,9 @@
 
 **Date (yyyy-mm-dd):**	2020-05-25
 
+## Description
+
+An utility for reviewing books. It displays a list of books, offers books search, shows a book information card with the book rating.
 
 ## Environment Variables
 
