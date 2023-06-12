@@ -1,4 +1,4 @@
-# PROJECT 1 - Books Reviews
+# CS50-PROJECT 1 - Books Reviews
 
 **Author:** 			Juan Gabriel Mejía
 
